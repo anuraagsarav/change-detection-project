@@ -80,4 +80,4 @@ def visualize_sample(sample_index=0, threshold=0.5):
 
 
 if __name__ == "__main__":
-    visualize_sample(sample_index=3)
+    visualize_sample(sample_index=12)

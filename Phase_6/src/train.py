@@ -102,7 +102,7 @@ def train():
         )
 
     # Save model (temporary checkpoint)
-    torch.save(model.state_dict(), "siamese_unet_step2.pth")
+    torch.save(model.state_dict(), "siamese_unet_dice.pth")
 
 
 if __name__ == "__main__":
