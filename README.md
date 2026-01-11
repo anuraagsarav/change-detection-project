@@ -42,12 +42,6 @@ This project uses publicly available satellite imagery datasets:
 
 
 
-\- \*\*DSIFN-CD\*\*  
-
-&nbsp; https://github.com/liumency/DSIFN-CD
-
-
-
 \- \*\*Custom Google Earth Samples (for academic use)\*\*  
 
 &nbsp; Data sourced manually for experimental comparison.
