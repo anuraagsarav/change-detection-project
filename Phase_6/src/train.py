@@ -10,7 +10,7 @@ from config import *
 device = torch.device(DEVICE)
 
 # -------------------------------------------------
-# DICE LOSS (NEW — STEP 2)
+# DICE LOSS
 # -------------------------------------------------
 class DiceLoss(nn.Module):
     def __init__(self, smooth=1.0):
@@ -57,8 +57,17 @@ def train():
     # Model
     model = SiameseUNet().to(device)
 
-    # Optimizer (unchanged from Step-1)
+    # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=LR)
+
+    # -------------------------------------------------
+    # STEP-3: LEARNING RATE SCHEDULER
+    # -------------------------------------------------
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer,
+        step_size=LR_STEP,
+        gamma=LR_GAMMA
+    )
 
     # -------------------------------------------------
     # TRAINING LOOP
@@ -95,14 +104,21 @@ def train():
 
         val_loss /= len(val_loader)
 
+        # -------------------------------------------------
+        # STEP-3: UPDATE LEARNING RATE
+        # -------------------------------------------------
+        scheduler.step()
+        current_lr = optimizer.param_groups[0]["lr"]
+
         print(
             f"Epoch {epoch+1}/{EPOCHS} | "
+            f"LR: {current_lr:.6f} | "
             f"Train Loss: {train_loss:.4f} | "
             f"Val Loss: {val_loss:.4f}"
         )
 
-    # Save model (temporary checkpoint)
-    torch.save(model.state_dict(), "siamese_unet_step2.pth")
+    # Save model
+    torch.save(model.state_dict(), "siamese_unet_step3.pth")
 
 
 if __name__ == "__main__":

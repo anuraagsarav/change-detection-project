@@ -20,7 +20,7 @@ def visualize_sample(sample_index=0, threshold=0.5):
 
     # Load model
     model = SiameseUNet().to(device)
-    model.load_state_dict(torch.load("siamese_unet_dice.pth", map_location=device))
+    model.load_state_dict(torch.load("siamese_unet_LR.pth", map_location=device))
     model.eval()
 
     with torch.no_grad():
