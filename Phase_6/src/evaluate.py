@@ -27,7 +27,7 @@ def evaluate(threshold=0.5):
     loader = DataLoader(dataset, batch_size=1, shuffle=False)
 
     model = SiameseUNet().to(device)
-    model.load_state_dict(torch.load("siamese_unet_LR.pth", map_location=device))
+    model.load_state_dict(torch.load("siamese_unet_ES.pth", map_location=device))
     model.eval()
 
     iou_scores = []

@@ -25,12 +25,11 @@ class DiceLoss(nn.Module):
         dice = (2.0 * intersection + self.smooth) / (
             preds.sum() + targets.sum() + self.smooth
         )
-
         return 1 - dice
 
 
 # -------------------------------------------------
-# COMBINED BCE + DICE LOSS
+# COMBINED LOSS
 # -------------------------------------------------
 bce_loss = nn.BCELoss()
 dice_loss = DiceLoss()
@@ -40,39 +39,30 @@ def combined_loss(pred, mask):
 
 
 # -------------------------------------------------
-# TRAINING FUNCTION
+# TRAINING WITH EARLY STOPPING
 # -------------------------------------------------
 def train():
-    # Dataset
     train_ds = ChangeDataset(DATASET_DIR, "train")
     val_ds = ChangeDataset(DATASET_DIR, "val")
 
-    train_loader = DataLoader(
-        train_ds, batch_size=BATCH_SIZE, shuffle=True
-    )
-    val_loader = DataLoader(
-        val_ds, batch_size=BATCH_SIZE
-    )
+    train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE)
 
-    # Model
     model = SiameseUNet().to(device)
 
-    # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=LR)
 
-    # -------------------------------------------------
-    # STEP-3: LEARNING RATE SCHEDULER
-    # -------------------------------------------------
     scheduler = optim.lr_scheduler.StepLR(
         optimizer,
         step_size=LR_STEP,
         gamma=LR_GAMMA
     )
 
-    # -------------------------------------------------
-    # TRAINING LOOP
-    # -------------------------------------------------
+    best_val_loss = float("inf")
+    patience_counter = 0
+
     for epoch in range(EPOCHS):
+        # ---------------- TRAIN ----------------
         model.train()
         train_loss = 0.0
 
@@ -90,9 +80,7 @@ def train():
 
         train_loss /= len(train_loader)
 
-        # -------------------------------------------------
-        # VALIDATION
-        # -------------------------------------------------
+        # ---------------- VALIDATION ----------------
         model.eval()
         val_loss = 0.0
 
@@ -104,9 +92,6 @@ def train():
 
         val_loss /= len(val_loader)
 
-        # -------------------------------------------------
-        # STEP-3: UPDATE LEARNING RATE
-        # -------------------------------------------------
         scheduler.step()
         current_lr = optimizer.param_groups[0]["lr"]
 
@@ -117,8 +102,20 @@ def train():
             f"Val Loss: {val_loss:.4f}"
         )
 
-    # Save model
-    torch.save(model.state_dict(), "siamese_unet_step3.pth")
+        # ---------------- EARLY STOPPING ----------------
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            patience_counter = 0
+            torch.save(model.state_dict(), "siamese_unet_ES.pth")
+        else:
+            patience_counter += 1
+
+        if patience_counter >= PATIENCE:
+            print(
+                f"\nEarly stopping triggered at epoch {epoch+1}. "
+                f"Best Val Loss: {best_val_loss:.4f}"
+            )
+            break
 
 
 if __name__ == "__main__":
